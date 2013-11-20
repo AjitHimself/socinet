@@ -1,0 +1,22 @@
+<html>
+    <head>
+        <title>Zaps Social :: User Login</title>
+    </head>
+    <body>
+        <form method="post" action="/login/">
+        {% csrf_token %}
+        {% if form.errors.inactive %}
+            <div>{{ form.errors.inactive.as_text }}</div>
+        {% endif %}
+        {% if form.errors.email %}
+            <div>{{ form.errors.email.as_text }}</div>
+        {% endif %}
+        <p><label for="id_email">Email:</label> <input id="id_email" name="email" type="email" /></p>
+        {% if form.errors.password %}
+            <div>{{ form.errors.password.as_text }}</div>
+        {% endif %}
+        <p><label for="id_password">Password:</label> <input id="id_password" name="password" type="password" /></p>
+        <input type="submit" value=" Login " />
+        </form>
+    </body>
+</html>

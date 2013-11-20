@@ -32,13 +32,16 @@ class LoginForm(forms.Form):
     def clean(self):
         email = self.cleaned_data.get("email")
         password = self.cleaned_data.get("password")
-        
-        user = Users.objects.get(email__exact=email)
-        if not user and hashers.check_password(password, 'md5') is False:
-            self._errors['password'] = 'Please provide correct email and password' 
-            forms.ValidationError('Please provide correct email and password.')
-        elif user.is_active is False:
-            self._errors['inactive'] = 'User is inactive.' 
+
+        try:
+            user = Users.objects.get(email__exact=email)
+            if not user and hashers.check_password(password, 'md5') is False:
+                self._errors['password'] = 'Please provide correct email and password'
+                forms.ValidationError('Please provide correct email and password.')
+            elif user.is_active is False:
+                self._errors['inactive'] = 'User is inactive.'
+        except Users.DoesNotExist:
+            pass
         return self.cleaned_data
 
     def get_user_id(self):

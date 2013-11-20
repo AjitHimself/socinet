@@ -6,6 +6,7 @@ from users.forms import *
 def register(request):
 
     if request.method == 'POST':
+        #request.POST['ip_address'] = request.META.get('REMOTE_ADDR')
         form = RegisterForm(request.POST, request.FILES)
         if form.is_valid():
             #Process data in form.clean_data and save to database
