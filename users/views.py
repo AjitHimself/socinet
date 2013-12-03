@@ -1,40 +1,55 @@
 from django.contrib.auth import hashers
 from django.shortcuts import render, redirect
-from users.models import Users
+import json
+from users.models import Users as UserProfile
 from users.forms import *
+from userprofile.decorators import check_user
 
 def register(request):
 
     if request.method == 'POST':
-        #request.POST['ip_address'] = request.META.get('REMOTE_ADDR')
-        form = RegisterForm(request.POST, request.FILES)
+
+        form = RegisterForm(request, request.POST, request.FILES)
         if form.is_valid():
             #Process data in form.clean_data and save to database
             recipients = form.cleaned_data.get('email')
-            form.clean_data['password'] = hashers.make_password(form.cleaned_data.get('password'))
-            user = Users(form.cleaned_data)
+            user = UserProfile(**form.cleaned_data)
             #from django.core.mail import send_mail
             #send_mail('subject', 'message', 'info@zapscms.com', recipients)
-            user.save()
+            #import pdb; pdb.set_trace()
+            try:
+                user.save()
+            except Exception, e:
+                raise e
             return redirect('/')
     else:
-        form = RegisterForm()
+        form = RegisterForm(request)
 
     return render(request, 'users/register.html', {
         'form': form
     })
 
 def login(request):
+    user = request.session.get('zapsuser', False)
+    if user:
+        return redirect('/')
+
+
     if request.method == 'POST':
         form = LoginForm(request.POST)
+
         if form.is_valid():
-            try:
-                u = Users.objects.get(email=request.POST['email'])
-                if u.password == hashers.make_password(request.POST['password']):
-                    request.session['user'] = u
-                    return redirect('/')
-            except Users.DoesNotExist:
-                pass
+            usr = form.get_user()
+            sess_user = {
+                "first_name": usr.first_name,
+                "last_name":  usr.last_name,
+                "email":   usr.email,
+                "is_active":   usr.is_active,
+                #"dob":   usr.birth_date,
+                "username":   usr.username,
+            }
+            request.session['zapsuser'] = json.dumps(sess_user)
+            return redirect('/')
 
     else:
         form = LoginForm()
@@ -43,9 +58,10 @@ def login(request):
         'form': form
     })
 
+@check_user('zapsuser')
 def logout(request):
     try:
-        del request.session['user']
+        del request.session['zapsuser']
     except KeyError:
         pass
 
